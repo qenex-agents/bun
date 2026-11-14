@@ -292,8 +292,8 @@ mod tests {
             denied.to_string(),
             format!(
                 "qenex seat {}: refusing to write outside the seat workspace: {}\nset {}={} to allow global writes",
-                bun_fmt::s(&denied.seat),
-                bun_fmt::s(&denied.path),
+                bun_core::fmt::s(&denied.seat),
+                bun_core::fmt::s(&denied.path),
                 ALLOW_GLOBAL_ENV,
                 ALLOW_GLOBAL_VALUE,
             )
