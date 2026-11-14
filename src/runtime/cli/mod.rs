@@ -2406,6 +2406,11 @@ pub(crate) fn print_version_and_exit() -> ! {
     // `\n` is baked into the constant) → one syscall.
     let w = Output::writer();
     let _ = w.write_all(Global::package_json_version_nl.as_bytes());
+    // QENEX seat binding: a seat-bound Bun reports its seat identity. An
+    // unbound Bun prints nothing extra, so its output is unchanged.
+    if let Some(seat) = bun_install::qenex_seat::identity_line() {
+        let _ = w.write_all(&seat);
+    }
     Output::flush();
     Global::exit(0);
 }
