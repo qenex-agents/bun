@@ -134,6 +134,12 @@ new!(pub BUN_INSPECT_PRELOAD: string, "BUN_INSPECT_PRELOAD", {});
 new!(pub BUN_INSTALL: string, "BUN_INSTALL", {});
 new!(pub BUN_INSTALL_BIN: string, "BUN_INSTALL_BIN", {});
 new!(pub BUN_INSTALL_GLOBAL_DIR: string, "BUN_INSTALL_GLOBAL_DIR", {});
+// QENEX seat binding. `QENEX_SEAT` names the seat, `QENEX_SEAT_WORKSPACE`
+// is the only writable root of a seat-bound process, and
+// `QENEX_SEAT_ALLOW_GLOBAL=1` disables that confinement.
+new!(pub QENEX_SEAT: string, "QENEX_SEAT", {});
+new!(pub QENEX_SEAT_WORKSPACE: string, "QENEX_SEAT_WORKSPACE", {});
+new!(pub QENEX_SEAT_ALLOW_GLOBAL: string, "QENEX_SEAT_ALLOW_GLOBAL", {});
 // Minimum response `Content-Length` (in bytes) for `bun install` to
 // stream a tarball directly into the extractor instead of buffering the
 // whole body first. Smaller tarballs stay on the buffered path where
