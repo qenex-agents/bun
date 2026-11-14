@@ -112,6 +112,7 @@ pub mod audit_fix;
 pub mod bin_real;
 pub mod cache_pack;
 pub(crate) mod cache_publish;
+pub mod qenex_seat;
 pub mod dedupe;
 pub mod git_runner;
 pub mod hoisted_install;
