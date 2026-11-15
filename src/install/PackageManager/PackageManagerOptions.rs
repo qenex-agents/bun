@@ -629,6 +629,16 @@ fn make_open_dir_under(base: &[u8], parts: &[&[u8]]) -> crate::Result<bun_sys::F
 }
 
 pub fn open_global_dir(explicit_global_dir: &[u8]) -> crate::Result<bun_sys::Fd> {
+    // QENEX seat binding: the global install root of a seat-bound process
+    // lives inside the seat workspace. An explicitly configured one outside of
+    // the workspace is refused instead of being used.
+    if let Some(roots) = crate::qenex_seat::roots() {
+        if !explicit_global_dir.is_empty() {
+            crate::qenex_seat::ensure_writable(explicit_global_dir)
+                .unwrap_or_else(|denied| crate::qenex_seat::refuse_write(&denied));
+        }
+        return make_open_dir(&roots.install_root);
+    }
     if let Some(home_dir) = env_var::BUN_INSTALL_GLOBAL_DIR.get() {
         return make_open_dir(&expand_home(home_dir));
     }
@@ -652,6 +662,23 @@ pub fn open_global_dir(explicit_global_dir: &[u8]) -> crate::Result<bun_sys::Fd>
 }
 
 pub(crate) fn open_global_bin_dir(opts_: Option<&Api::BunInstall>) -> crate::Result<bun_sys::Fd> {
+    // QENEX seat binding: the global bin directory of a seat-bound process
+    // lives inside the seat workspace. An explicitly configured one outside of
+    // the workspace is refused instead of being used.
+    if let Some(roots) = crate::qenex_seat::roots() {
+        if let Some(home_dir) = env_var::BUN_INSTALL_BIN.get() {
+            crate::qenex_seat::ensure_writable(home_dir)
+                .unwrap_or_else(|denied| crate::qenex_seat::refuse_write(&denied));
+        }
+        if let Some(home_dir) = opts_
+            .and_then(|opts| opts.global_bin_dir.as_deref())
+            .filter(|home_dir| !home_dir.is_empty())
+        {
+            crate::qenex_seat::ensure_writable(home_dir)
+                .unwrap_or_else(|denied| crate::qenex_seat::refuse_write(&denied));
+        }
+        return make_open_dir(&roots.bin_dir);
+    }
     if let Some(home_dir) = env_var::BUN_INSTALL_BIN.get() {
         return make_open_dir(&expand_home(home_dir));
     }

@@ -201,7 +201,13 @@ fn get_temporary_directory_run(
     let cache_directory = Dir::borrow(&cache_directory_fd);
     // The chosen tempdir must be on the same filesystem as the cache directory
     // This makes renameat() work
-    let temp_dir_name = FileSystem::get_default_temp_dir();
+    // QENEX seat binding: the scratch directory of a seat-bound process lives
+    // inside the seat workspace, so it never writes to the host's temporary
+    // directory.
+    let temp_dir_name: &'static [u8] = match crate::qenex_seat::roots() {
+        Some(roots) => bun_core::heap::release(roots.temp_dir.into_boxed_slice()),
+        None => FileSystem::get_default_temp_dir(),
+    };
 
     let mut tried_dot_tmp = false;
     let mut tempdir: Dir =
@@ -402,6 +408,19 @@ pub fn fetch_cache_directory_path(
             .filter(|dir| !dir.is_empty())
             .map(options::expand_home)
     };
+    // QENEX seat binding: a seat-bound process keeps the package cache inside
+    // the seat workspace. An explicitly configured cache directory outside of
+    // the workspace is refused instead of being used.
+    if let Some(roots) = crate::qenex_seat::roots() {
+        if let Some(dir) = variable(b"BUN_INSTALL_CACHE_DIR") {
+            crate::qenex_seat::ensure_writable(&dir)
+                .unwrap_or_else(|denied| crate::qenex_seat::refuse_write(&denied));
+        }
+        return Ok(CacheDir {
+            path: roots.cache_dir,
+            is_cwd_fallback: false,
+        });
+    }
     let from_env = variable(b"BUN_INSTALL_CACHE_DIR");
     let bun_install = variable(b"BUN_INSTALL");
     let home = env_var::XDG_CACHE_HOME
